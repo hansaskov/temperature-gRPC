@@ -56,7 +56,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(TemperatureServiceServer::new(temperature_service))
         .serve(addr)
         .await?;
-    
 
 
     Ok(())

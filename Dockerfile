@@ -1,43 +1,28 @@
-# syntax=docker/dockerfile:1.3-labs
+# Use the official Rust image as a parent image
+FROM rust:1-alpine3.19
 
-FROM rust:1-alpine3.19 AS build
-
-# Set environment variables
+# This is important, see https://github.com/rust-lang/docker-rust/issues/85
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-# Install dependencies
+# Install dependencies including protoc
 RUN apk add --no-cache musl-dev protobuf-dev protoc
 
-# Set the workdir
+# Set the workdir and copy the source into it
 WORKDIR /app
+COPY ./ /app
 
-# Copy only Cargo.toml and Cargo.lock first to cache dependencies
-COPY Cargo.toml Cargo.lock ./
+# Do a release build
+RUN cargo build --bin server --release
+RUN strip target/release/server
 
-# This step compiles only our dependencies and saves them in a layer
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo fetch
-
-# Copy the source code
-COPY ./ ./
-
-# Build the application
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    <<EOF
-    set -e
-    cargo build --bin server --release
-    strip target/release/server
-EOF
-
-# Use a plain alpine image for the final stage
+# Use a plain alpine image, the alpine version needs to match the builder
 FROM alpine:3.19
 
-# Install runtime dependencies
+# If needed, install additional dependencies here
 RUN apk add --no-cache libgcc
 
-# Copy the binary from the build stage
-COPY --from=build /app/target/release/server /server
+# Copy the binary into the final image
+COPY --from=0 /app/target/release/server .
 
 # Set the binary as entrypoint
 ENTRYPOINT ["/server"]
