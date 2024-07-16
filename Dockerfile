@@ -1,28 +1,37 @@
 # Use the official Rust image as a parent image
-FROM rust:1-alpine3.19
+FROM rust:1-alpine3.19 AS chef
+
+# Install build dependencies
+RUN apk add --no-cache musl-dev gcc libc-dev
+
+# Install cargo-chef
+RUN cargo install cargo-chef
+
+# Install dependencies including protoc
+RUN apk add --no-cache protobuf-dev protoc
 
 # This is important, see https://github.com/rust-lang/docker-rust/issues/85
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-# Install dependencies including protoc
-RUN apk add --no-cache musl-dev protobuf-dev protoc
-
-# Set the workdir and copy the source into it
 WORKDIR /app
-COPY ./ /app
 
-# Do a release build
+# Prepare recipe
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# Build dependencies - this is the caching Docker layer!
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+# Build application
+COPY . .
 RUN cargo build --bin server --release
 RUN strip target/release/server
 
-# Use a plain alpine image, the alpine version needs to match the builder
-FROM alpine:3.19
-
-# If needed, install additional dependencies here
+# Create the runtime image
+FROM alpine:3.19 AS runtime
 RUN apk add --no-cache libgcc
-
-# Copy the binary into the final image
-COPY --from=0 /app/target/release/server .
-
-# Set the binary as entrypoint
+COPY --from=builder /app/target/release/server /server
 ENTRYPOINT ["/server"]
