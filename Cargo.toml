@@ -1,5 +1,5 @@
 [package]
-name = "tempurature-sender"
+name = "tempurature_sender"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,10 @@ edition = "2021"
 tonic = "0.12"
 prost = "0.13"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
-systemstat = "0.2.3"
-glob = "0.3.1"
+serde = "1.0.204"
+wmi = "0.13.3"
+anyhow = "1.0.86"
+
 
 [build-dependencies]
 tonic-build = "0.12"

@@ -1,8 +1,7 @@
-use temperature::{TemperatureReply, TemperatureRequest, TemperatureReading};
 use temperature::temperature_service_server::{TemperatureService, TemperatureServiceServer};
+use temperature::{TemperatureReading, TemperatureReply, TemperatureRequest};
 use tonic::IntoRequest;
 use tonic::{transport::Server, Request, Response, Status};
-
 
 pub mod temperature {
     tonic::include_proto!("temperature"); // The string specified here must match the proto package name
@@ -10,12 +9,12 @@ pub mod temperature {
 
 fn process_temperature_readings(readings: &[TemperatureReading]) -> TemperatureReply {
     let reading_count = readings.len() as i32;
-    
+
     if reading_count == 0 {
-        return TemperatureReply{
+        return TemperatureReply {
             average_temperature: 0.0,
             reading_count: 0,
-            latest_timestamp: 0
+            latest_timestamp: 0,
         };
     }
 
@@ -26,7 +25,6 @@ fn process_temperature_readings(readings: &[TemperatureReading]) -> TemperatureR
     }
 }
 
-
 #[derive(Debug, Default)]
 pub struct MyTemperature {}
 
@@ -34,13 +32,13 @@ pub struct MyTemperature {}
 impl TemperatureService for MyTemperature {
     async fn send_temperatures(
         &self,
-        request: Request<TemperatureRequest>
+        request: Request<TemperatureRequest>,
     ) -> Result<Response<TemperatureReply>, Status> {
         // Extract the inner TemperatureRequest from the Request object
         let temp_request = request.into_inner();
-        
+
         println!("Got a request: {:?}", temp_request);
-        
+
         // Now you can access the fields of temp_request directly
         let reply = process_temperature_readings(&temp_request.readings);
         Ok(Response::new(reply))
