@@ -1,5 +1,5 @@
 [package]
-name = "tempurature_sender"
+name = "tempurature_gRPC"
 version = "0.1.0"
 edition = "2021"
 

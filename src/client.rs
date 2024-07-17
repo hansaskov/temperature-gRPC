@@ -5,7 +5,7 @@ use temperature::{
     temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
 };
 
-use tempurature_sender::HardwareMonitor;
+use tempurature_gRPC::HardwareMonitor;
 
 pub mod temperature {
     tonic::include_proto!("temperature"); // The string specified here must match the proto package name
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(cpu) => {
                 println!(
                     "Recorded: Timestamp: {}, Temperature: {}°C",
-                    timestamp, cpu.max
+                    timestamp, cpu.value
                 );
                 readings.push(TemperatureReading {
                     timestamp,
