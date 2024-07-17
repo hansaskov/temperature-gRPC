@@ -10,6 +10,9 @@ Before you begin, ensure you have the following installed:
 - [Protoc](https://github.com/protocolbuffers/protobuf/releases) - Protocol Buffers compiler
 - [Libre Hardware Monitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) - Necessary for getting cpu temp on the client. 
 
+> [!WARNING]
+> Libre Hardware Monitor must be running on the client for the program to work
+
 > **Note:**
 > Make sure to add the Protoc binary to your system's PATH environment variable.
 
