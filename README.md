@@ -17,8 +17,8 @@ Before you begin, ensure you have the following installed:
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/temperature-trpc.git
-   cd temperature-trpc
+   git clone https://github.com/hansaskov/tempurature-sender.git
+   cd tempurature-sender
    ```
 
 ## Usage
