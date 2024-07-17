@@ -34,13 +34,12 @@ pub struct HardwareMonitor {
 impl HardwareMonitor {
     pub fn new() -> Result<Self> {
         let com_con = COMLibrary::new()?;
-        let wmi_con =
-            WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
+        let wmi_con = WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
 
         Ok(Self { wmi_con })
     }
 
-    pub fn query_SensorType(
+    pub fn query_sensor_type(
         &self,
         sensor_type: SensorType,
         name_filter: &str,
@@ -53,7 +52,7 @@ impl HardwareMonitor {
     }
 
     pub fn cpu_temp(&self) -> Result<Sensor> {
-        let result = self.query_SensorType(SensorType::Temperature, "CPU Package")?;
+        let result = self.query_sensor_type(SensorType::Temperature, "CPU Package")?;
 
         let sensor_reading = result.first();
 
