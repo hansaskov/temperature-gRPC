@@ -1,5 +1,3 @@
-Here's an improved version of the README.md document with better formatting and more detailed descriptions:
-
 # Temperature gRPC
 
 This project demonstrates how to use gRPC to securely transmit system information in a type-safe manner. It consists of a server and client application built in Rust.
@@ -10,6 +8,7 @@ Before you begin, ensure you have the following installed:
 
 - [Rust](https://www.rust-lang.org/tools/install) - The Rust programming language and Cargo package manager
 - [Protoc](https://github.com/protocolbuffers/protobuf/releases) - Protocol Buffers compiler
+- [Libre Hardware Monitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) - Necessary for getting cpu temp on the client. 
 
 **Note:** Make sure to add the Protoc binary to your system's PATH environment variable.
 
