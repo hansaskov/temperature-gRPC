@@ -1,6 +1,5 @@
 use temperature::temperature_service_server::{TemperatureService, TemperatureServiceServer};
 use temperature::{TemperatureReading, TemperatureReply, TemperatureRequest};
-use tonic::IntoRequest;
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod temperature {

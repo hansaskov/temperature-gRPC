@@ -35,7 +35,7 @@ impl HardwareMonitor {
     pub fn new() -> Result<Self> {
         let com_con = COMLibrary::new()?;
         let wmi_con =
-            WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con.into())?;
+            WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
 
         Ok(Self { wmi_con })
     }
