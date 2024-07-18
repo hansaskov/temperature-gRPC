@@ -34,6 +34,12 @@ To start the tRPC server, run the following command:
 cargo run --bin server
 ```
 
+or use docker
+
+``` bash
+docker compose up --build
+```
+
 The server will start and listen for incoming connections.
 
 ### Start the Client
