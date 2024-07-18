@@ -12,7 +12,7 @@ pub mod temperature {
 mod time_helper;
 use time_helper::TimeHelper;
 
-const BATCH_SIZE: usize = 30;
+const BATCH_SIZE: usize = 5;
 const LOOP_DURATION: Duration = Duration::from_secs(1);
 
 #[tokio::main]

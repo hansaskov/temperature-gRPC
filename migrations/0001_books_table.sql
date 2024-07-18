@@ -3,5 +3,4 @@ CREATE TABLE conditions (
    temperature FLOAT NULL
 );
 
-SELECT
-   create_hypertable('  ', by_range('time'));
+SELECT create_hypertable('conditions', by_range('time'));
