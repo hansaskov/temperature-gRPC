@@ -2,13 +2,10 @@
 FROM rust:1-alpine3.19 AS chef
 
 # Install build dependencies
-RUN apk add --no-cache musl-dev gcc libc-dev
+RUN apk add --no-cache musl-dev libc-dev protobuf-dev
 
 # Install cargo-chef
 RUN cargo install cargo-chef
-
-# Install dependencies including protoc
-RUN apk add --no-cache protobuf-dev protoc
 
 # This is important, see https://github.com/rust-lang/docker-rust/issues/85
 ENV RUSTFLAGS="-C target-feature=-crt-static"
