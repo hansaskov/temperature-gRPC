@@ -1,8 +1,10 @@
+
+
 #[cfg(target_os = "windows")]
 pub mod windows_hardware_monitor {
     use anyhow::{anyhow, Result};
-    use wmi::{COMLibrary, WMIConnection};
     use serde::Deserialize;
+    use wmi::{COMLibrary, WMIConnection};
 
     #[derive(Deserialize, Debug, Clone)]
     #[serde(rename_all = "PascalCase")]
@@ -34,7 +36,8 @@ pub mod windows_hardware_monitor {
     impl HardwareMonitor {
         pub fn new() -> Result<Self> {
             let com_con = COMLibrary::new()?;
-            let wmi_con = WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
+            let wmi_con =
+                WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
 
             Ok(Self { wmi_con })
         }
@@ -75,7 +78,9 @@ pub mod windows_hardware_monitor {
 
     impl HardwareMonitor {
         pub fn new() -> Result<Self> {
-            Err(anyhow::anyhow!("HardwareMonitor is only available on Windows"))
+            Err(anyhow::anyhow!(
+                "HardwareMonitor is only available on Windows"
+            ))
         }
     }
 }

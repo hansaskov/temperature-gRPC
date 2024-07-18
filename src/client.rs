@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     value: cpu.value,
                 });
             }
-            Err(x) => println!("Timestamp: {timestamp}, error: {x}" ),
+            Err(x) => println!("Timestamp: {timestamp}, error: {x}"),
         }
 
         thread::sleep(Duration::from_secs(1));
