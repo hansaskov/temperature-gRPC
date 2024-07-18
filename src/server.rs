@@ -35,16 +35,8 @@ impl TemperatureService for MyTemperature {
             .await
             .map_err(|e| Status::internal(format!("Failed to insert readings: {}", e)))?;
 
-        let res = sqlx::query("SELECT time, temperature FROM conditions")
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| Status::internal(format!("Failed to fetch conditions: {}", e)))?;
 
-        for row in res {
-            let reading = TemperatureReading {
-                timestamp: Some(TimeHelper::from_offset_date_time(row.get("time"))),
-                value: row.get("temperature"),
-            };
+        for reading in readings {
             println!("{reading:?}");
         }
 
