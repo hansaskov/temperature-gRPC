@@ -3,7 +3,6 @@ use clap::Parser;
 use proto::temperature_service_server::{TemperatureService, TemperatureServiceServer};
 use proto::{TemperatureReading, TemperatureReply, TemperatureRequest};
 use sqlx::postgres::PgPoolOptions;
-use std::env;
 use tonic::{transport::Server, Request, Response, Status};
 
 mod config;
