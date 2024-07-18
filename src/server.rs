@@ -3,8 +3,8 @@ use clap::Parser;
 use proto::temperature_service_server::{TemperatureService, TemperatureServiceServer};
 use proto::{TemperatureReading, TemperatureReply, TemperatureRequest};
 use sqlx::postgres::PgPoolOptions;
-use tonic::{transport::Server, Request, Response, Status};
 use std::env;
+use tonic::{transport::Server, Request, Response, Status};
 
 mod config;
 use config::Args;
@@ -44,16 +44,8 @@ impl TemperatureService for MyTemperature {
     }
 }
 
-fn get_env_var(key: &str, default: &str) -> String {
-    env::var(key).unwrap_or_else(|_| {
-        println!("Warning: {} not set. Using default value: {}", key, default);
-        default.to_string()
-    })
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
-
     let args = Args::parse();
 
     // Set up database connection pool
@@ -63,9 +55,7 @@ async fn main() -> Result<()> {
         .await?;
 
     // Verify database connection
-    sqlx::query("SELECT 1")
-        .fetch_one(&pool)
-        .await?;
+    sqlx::query("SELECT 1").fetch_one(&pool).await?;
 
     // Set up temperature service
     let temperature_service = MyTemperature::default();
