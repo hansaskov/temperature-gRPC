@@ -5,7 +5,7 @@ use temperature::{
     temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
 };
 
-use tempurature_gRPC::HardwareMonitor;
+use tempurature_grpc::windows_hardware_monitor::HardwareMonitor;
 
 pub mod temperature {
     tonic::include_proto!("temperature"); // The string specified here must match the proto package name
