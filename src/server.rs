@@ -54,7 +54,11 @@ async fn main() -> Result<()> {
         .await?;
 
     // Verify database connection
-    sqlx::query("SELECT 1").fetch_one(&pool).await?;
+    let row: (i64,) = sqlx::query_as("SELECT $1")
+        .bind(150_i64)
+        .fetch_one(&pool).await?;
+
+    println!("Connection to server successful \n {row:?}");
 
     // Set up temperature service
     let temperature_service = MyTemperature::default();
