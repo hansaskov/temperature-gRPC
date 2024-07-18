@@ -3,7 +3,7 @@ use temperature::{
     temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
 };
 use tempurature_grpc::windows_hardware_monitor::HardwareMonitor;
-use tokio::time::{interval, Instant};
+use tokio::time::Instant;
 
 pub mod temperature {
     tonic::include_proto!("temperature");
@@ -12,14 +12,13 @@ pub mod temperature {
 mod time_helper;
 use time_helper::TimeHelper;
 
-const BATCH_SIZE: usize = 5;
+const BATCH_SIZE: usize = 30;
 const LOOP_DURATION: Duration = Duration::from_secs(1);
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = TemperatureServiceClient::connect("http://[::1]:50051").await?;
     let hw = HardwareMonitor::new()?;
-    let mut interval = interval(LOOP_DURATION);
 
     let mut readings = Vec::with_capacity(BATCH_SIZE);
 
@@ -48,7 +47,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        interval.tick().await;
         let elapsed = start.elapsed();
         if elapsed < LOOP_DURATION {
             tokio::time::sleep(LOOP_DURATION - elapsed).await;
