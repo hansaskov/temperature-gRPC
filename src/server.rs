@@ -1,11 +1,10 @@
-use anyhow;
 use clap::Parser;
 use proto::temperature_service_server::{TemperatureService, TemperatureServiceServer};
 use proto::{TemperatureReading, TemperatureRequest};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
-use tonic::{transport::Server, Request, Response, Status};
 use sqlx::Row;
+use tonic::{transport::Server, Request, Response, Status};
 
 mod config;
 use config::Args;
@@ -17,7 +16,7 @@ pub mod proto {
     tonic::include_proto!("temperature");
 }
 pub struct MyTemperature {
-    pool: sqlx::PgPool
+    pool: sqlx::PgPool,
 }
 
 #[tonic::async_trait]
@@ -25,34 +24,31 @@ impl TemperatureService for MyTemperature {
     async fn send_temperatures(
         &self,
         request: Request<TemperatureRequest>,
-    ) -> tonic::Result<Response<proto::Empty>, Status> {
+    ) -> Result<Response<proto::Empty>, Status> {
         let readings = &request.get_ref().readings;
-        println!("Got the following readings: {:?}", readings);
-
+        
         if readings.is_empty() {
             return Err(Status::invalid_argument("The provided request is empty"));
         }
 
-        insert_many_readings(readings, &self.pool).await.unwrap();
+        insert_many_readings(readings, &self.pool)
+            .await
+            .map_err(|e| Status::internal(format!("Failed to insert readings: {}", e)))?;
 
-        let res = sqlx::query("SELECT * FROM conditions")
+        let res = sqlx::query("SELECT time, temperature FROM conditions")
             .fetch_all(&self.pool)
             .await
-            .unwrap();
-
+            .map_err(|e| Status::internal(format!("Failed to fetch conditions: {}", e)))?;
 
         for row in res {
             let reading = TemperatureReading {
                 timestamp: Some(TimeHelper::from_offset_date_time(row.get("time"))),
-                value: row.get("temperature") 
+                value: row.get("temperature"),
             };
-
             println!("{reading:?}");
         }
 
-        let empty = proto::Empty {};
-
-        Ok(Response::new(empty))
+        Ok(Response::new(proto::Empty {}))
     }
 }
 
@@ -60,38 +56,33 @@ pub async fn insert_many_readings(
     readings: &[TemperatureReading],
     pool: &PgPool,
 ) -> anyhow::Result<()> {
-    if readings.is_empty() {
-        return Err(anyhow::anyhow!("No readings provided"));
-    }
-
-    let mut times = Vec::new();
-    let mut temperatures = Vec::new();
-
-    for reading in readings {
-        if let Some(timestamp) = &reading.timestamp {
-            times.push(TimeHelper::to_offset_date_time(timestamp));
-            temperatures.push(reading.value);
-        }
-    }
+    let (times, temperatures): (Vec<_>, Vec<_>) = readings
+        .iter()
+        .filter_map(|reading| {
+            reading
+                .timestamp
+                .as_ref()
+                .map(|timestamp| (TimeHelper::to_offset_date_time(timestamp), reading.value))
+        })
+        .unzip();
 
     if times.is_empty() {
-        return Err(anyhow::anyhow!("No valid readings with timestamps found"));
+        anyhow::bail!("No valid readings with timestamps found");
     }
 
     sqlx::query(
-        "
+        r#"
         INSERT INTO conditions (time, temperature)
         SELECT * FROM UNNEST($1::timestamptz[], $2::float8[])
-        "
+        "#,
     )
-    .bind(times)
-    .bind(temperatures)
+    .bind(&times)
+    .bind(&temperatures)
     .execute(pool)
     .await?;
 
     Ok(())
 }
-
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -105,7 +96,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Connection to DB was successful");
 
     // Set up temperature service
-    let temperature_service = MyTemperature{ pool };
+    let temperature_service = MyTemperature { pool };
 
     // Start the server
     println!("Starting server on {}", args.server_addr);

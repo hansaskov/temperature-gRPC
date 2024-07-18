@@ -1,6 +1,5 @@
 use std::thread;
 use std::time::Duration;
-use std::time::SystemTime;
 use temperature::{
     temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
 };
@@ -11,6 +10,9 @@ pub mod temperature {
     tonic::include_proto!("temperature"); // The string specified here must match the proto package name
 }
 
+mod time_helper;
+use time_helper::TimeHelper;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = TemperatureServiceClient::connect("http://[::1]:50051").await?;
@@ -18,8 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let hw = HardwareMonitor::new()?;
 
     for _ in 0..5 {
-        let system_time = SystemTime::now();
-        let timestamp = prost_types::Timestamp::from(system_time);
+        let timestamp = TimeHelper::timestamp_now();
 
         match hw.cpu_temp() {
             Ok(cpu) => {
