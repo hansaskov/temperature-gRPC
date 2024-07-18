@@ -1,6 +1,6 @@
 use std::thread;
 use std::time::Duration;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 use temperature::{
     temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
 };
@@ -18,10 +18,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let hw = HardwareMonitor::new()?;
 
     for _ in 0..5 {
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
+        let system_time = SystemTime::now();
+        let timestamp = prost_types::Timestamp::from(system_time);
 
         match hw.cpu_temp() {
             Ok(cpu) => {
@@ -30,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     timestamp, cpu.value
                 );
                 readings.push(TemperatureReading {
-                    timestamp,
+                    timestamp: Some(timestamp),
                     value: cpu.value,
                 });
             }

@@ -2,23 +2,22 @@ syntax = "proto3";
 
 package temperature;
 
+import "google/protobuf/timestamp.proto";
 
 service TemperatureService {
-    rpc SendTemperatures(TemperatureRequest) returns (TemperatureReply);
+    rpc SendTemperatures(TemperatureRequest) returns (Empty);
 }
 
 message TemperatureReading {
-    uint64 timestamp = 1;
-    float value = 2;  // Temperature value
+    google.protobuf.Timestamp timestamp = 1;
+    double value = 2;  // Temperature value
 }
 
 message TemperatureRequest {
     repeated TemperatureReading readings = 1;
 }
 
-message TemperatureReply {
-    float average_temperature = 1;
-    int32 reading_count = 2;
-    uint64 latest_timestamp = 3;
+message Empty {
+
 }
 

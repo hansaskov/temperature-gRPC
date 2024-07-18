@@ -1,36 +1,31 @@
-use anyhow::Result;
+use anyhow;
 use clap::Parser;
 use proto::temperature_service_server::{TemperatureService, TemperatureServiceServer};
-use proto::{TemperatureReading, TemperatureReply, TemperatureRequest};
+use proto::{TemperatureReading, TemperatureRequest};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 use tonic::{transport::Server, Request, Response, Status};
+use sqlx::Row;
 
 mod config;
 use config::Args;
 
+mod time_helper;
+use time_helper::TimeHelper;
+
 pub mod proto {
     tonic::include_proto!("temperature");
-    pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("temperature_descriptor");
 }
-
-fn process_temperature_readings(readings: &[TemperatureReading]) -> TemperatureReply {
-    TemperatureReply {
-        average_temperature: readings.iter().map(|r| r.value).sum::<f32>() / readings.len() as f32,
-        reading_count: readings.len() as i32,
-        latest_timestamp: readings.iter().map(|r| r.timestamp).max().unwrap(),
-    }
+pub struct MyTemperature {
+    pool: sqlx::PgPool
 }
-
-#[derive(Debug, Default)]
-pub struct MyTemperature {}
 
 #[tonic::async_trait]
 impl TemperatureService for MyTemperature {
     async fn send_temperatures(
         &self,
         request: Request<TemperatureRequest>,
-    ) -> Result<Response<TemperatureReply>, Status> {
+    ) -> tonic::Result<Response<proto::Empty>, Status> {
         let readings = &request.get_ref().readings;
         println!("Got the following readings: {:?}", readings);
 
@@ -38,39 +33,83 @@ impl TemperatureService for MyTemperature {
             return Err(Status::invalid_argument("The provided request is empty"));
         }
 
-        let reply = process_temperature_readings(readings);
-        Ok(Response::new(reply))
+        insert_many_readings(readings, &self.pool).await.unwrap();
+
+        let res = sqlx::query("SELECT * FROM conditions")
+            .fetch_all(&self.pool)
+            .await
+            .unwrap();
+
+
+        for row in res {
+            let reading = TemperatureReading {
+                timestamp: Some(TimeHelper::from_offset_date_time(row.get("time"))),
+                value: row.get("temperature") 
+            };
+
+            println!("{reading:?}");
+        }
+
+        let empty = proto::Empty {};
+
+        Ok(Response::new(empty))
     }
 }
 
+pub async fn insert_many_readings(
+    readings: &[TemperatureReading],
+    pool: &PgPool,
+) -> anyhow::Result<()> {
+    if readings.is_empty() {
+        return Err(anyhow::anyhow!("No readings provided"));
+    }
+
+    let mut times = Vec::new();
+    let mut temperatures = Vec::new();
+
+    for reading in readings {
+        if let Some(timestamp) = &reading.timestamp {
+            times.push(TimeHelper::to_offset_date_time(timestamp));
+            temperatures.push(reading.value);
+        }
+    }
+
+    if times.is_empty() {
+        return Err(anyhow::anyhow!("No valid readings with timestamps found"));
+    }
+
+    sqlx::query(
+        "
+        INSERT INTO conditions (time, temperature)
+        SELECT * FROM UNNEST($1::timestamptz[], $2::float8[])
+        "
+    )
+    .bind(times)
+    .bind(temperatures)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    // Set up database connection pool
     let pool = PgPoolOptions::new()
         .max_connections(args.max_connections)
         .connect(&args.database_url)
         .await?;
 
-    // Verify database connection
-    let row: (i64,) = sqlx::query_as("SELECT $1")
-        .bind(150_i64)
-        .fetch_one(&pool).await?;
-
-    println!("Connection to server successful \n {row:?}");
+    println!("Connection to DB was successful");
 
     // Set up temperature service
-    let temperature_service = MyTemperature::default();
-    let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
-        .build()
-        .expect("Failed to create reflection service");
+    let temperature_service = MyTemperature{ pool };
 
     // Start the server
     println!("Starting server on {}", args.server_addr);
     Server::builder()
-        .add_service(reflection_service)
         .add_service(TemperatureServiceServer::new(temperature_service))
         .serve(args.server_addr.parse()?)
         .await?;

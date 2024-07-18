@@ -22,9 +22,9 @@ pub mod windows_hardware_monitor {
     pub struct Sensor {
         pub sensor_type: SensorType,
         pub name: String,
-        pub value: f32,
-        pub min: f32,
-        pub max: f32,
+        pub value: f64,
+        pub min: f64,
+        pub max: f64,
     }
 
     pub struct HardwareMonitor {
@@ -53,7 +53,7 @@ pub mod windows_hardware_monitor {
         }
 
         pub fn cpu_temp(&self) -> Result<Sensor> {
-            let result = self.query_sensor_type(SensorType::Temperature, "CPU Package")?;
+            let result = self.query_sensor_type(SensorType::Temperature, "Core")?;
 
             let sensor_reading = result.first();
 
