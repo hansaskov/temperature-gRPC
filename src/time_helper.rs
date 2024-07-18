@@ -24,7 +24,6 @@ impl TimeHelper for Timestamp {
     }
 
     fn timestamp_now() -> Self {
-        let system_time = SystemTime::now();
-        prost_types::Timestamp::from(system_time)
+        prost_types::Timestamp::from(SystemTime::now())
     }
 }

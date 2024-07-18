@@ -26,7 +26,7 @@ impl TemperatureService for MyTemperature {
         request: Request<TemperatureRequest>,
     ) -> Result<Response<proto::Empty>, Status> {
         let readings = &request.get_ref().readings;
-        
+
         if readings.is_empty() {
             return Err(Status::invalid_argument("The provided request is empty"));
         }
@@ -92,16 +92,11 @@ async fn main() -> anyhow::Result<()> {
         .max_connections(args.max_connections)
         .connect(&args.database_url)
         .await?;
-
-    println!("Connection to DB was successful");
-
-    // Set up temperature service
-    let temperature_service = MyTemperature { pool };
-
-    // Start the server
+    
+    println!("Connection to the DB was a success!");
     println!("Starting server on {}", args.server_addr);
     Server::builder()
-        .add_service(TemperatureServiceServer::new(temperature_service))
+        .add_service(TemperatureServiceServer::new(MyTemperature { pool }))
         .serve(args.server_addr.parse()?)
         .await?;
 
