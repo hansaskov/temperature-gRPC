@@ -66,19 +66,3 @@ pub mod windows_hardware_monitor {
         }
     }
 }
-
-// Provide a stub implementation for non-Windows platforms
-#[cfg(not(target_os = "windows"))]
-pub mod windows_hardware_monitor {
-    use anyhow::Result;
-
-    pub struct HardwareMonitor;
-
-    impl HardwareMonitor {
-        pub fn new() -> Result<Self> {
-            Err(anyhow::anyhow!(
-                "HardwareMonitor is only available on Windows"
-            ))
-        }
-    }
-}
