@@ -28,7 +28,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let timestamp = TimeHelper::timestamp_now();
         match hw.cpu_temp() {
             Ok(cpu) => {
-                println!("Recorded: Timestamp: {}, Temperature: {}°C", timestamp, cpu.value);
+                println!(
+                    "Recorded: Timestamp: {}, Temperature: {}°C",
+                    timestamp, cpu.value
+                );
                 readings.push(TemperatureReading {
                     timestamp: Some(timestamp),
                     value: cpu.value,

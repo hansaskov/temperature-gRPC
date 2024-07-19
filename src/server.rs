@@ -35,7 +35,6 @@ impl TemperatureService for MyTemperature {
             .await
             .map_err(|e| Status::internal(format!("Failed to insert readings: {}", e)))?;
 
-
         for reading in readings {
             println!("{reading:?}");
         }
@@ -85,15 +84,13 @@ async fn main() -> anyhow::Result<()> {
         .connect(&args.database_url)
         .await?;
 
-    sqlx::migrate!()
-        .run(&pool)
-        .await?;
-    
+    sqlx::migrate!().run(&pool).await?;
+
     println!("Connection to the DB was a success!");
-    println!("Starting server on {}", args.server_addr);
+    println!("Starting server on {}", args.server_addres);
     Server::builder()
         .add_service(TemperatureServiceServer::new(MyTemperature { pool }))
-        .serve(args.server_addr.parse()?)
+        .serve(args.server_addres.parse()?)
         .await?;
 
     Ok(())
