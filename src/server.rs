@@ -3,7 +3,6 @@ use proto::temperature_service_server::{TemperatureService, TemperatureServiceSe
 use proto::{TemperatureReading, TemperatureRequest};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
-use sqlx::Row;
 use tonic::{transport::Server, Request, Response, Status};
 
 mod config;
