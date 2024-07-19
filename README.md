@@ -28,16 +28,19 @@ Before you begin, ensure you have the following installed:
 
 ### Start the Server
 
-To start the tRPC server, run the following command:
-
-```bash
-cargo run --bin server
-```
-
-or use docker
+Easiest way to start the tRPC server i with docker, by running the following command:
 
 ``` bash
 docker compose up --build
+```
+
+or you can run it locally with an external database url.
+
+> **Note:**
+> Only Postgres is supported
+
+```bash
+cargo run --bin server -- --db-url postgres://username:password@timescaledb:5432/mydatabase
 ```
 
 The server will start and listen for incoming connections.
@@ -51,11 +54,6 @@ cargo run --bin client
 ```
 
 The client will establish a connection with the server and begin exchanging system information.
-
-## Project Structure
-
-- `src/bin/server.rs`: Contains the server implementation
-- `src/bin/client.rs`: Contains the client implementation
 
 ## Contributing
 
