@@ -21,7 +21,7 @@ Before you begin, ensure you have the following installed:
 1. Clone this repository:
    ```bash
    git clone https://github.com/hansaskov/temperature-gRPC.git
-   cd tempurature-sender
+   cd tempurature-sender/ingestion
    ```
 
 ## Usage
