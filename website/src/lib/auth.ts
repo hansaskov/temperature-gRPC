@@ -1,14 +1,10 @@
 import { Lucia } from "lucia";
-import { BetterSqlite3Adapter } from "@lucia-auth/adapter-sqlite";
-import { db } from "./db";
+import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { GitHub } from "arctic";
+import { sessionTable, userTable, type User } from "./db/schema";
+import { db } from "./db/postgres";
 
-import type { DatabaseUser } from "./db";
-
-const adapter = new BetterSqlite3Adapter(db, {
-	user: "user",
-	session: "session"
-});
+const adapter = new DrizzlePostgreSQLAdapter(db, sessionTable, userTable);
 
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
@@ -19,7 +15,7 @@ export const lucia = new Lucia(adapter, {
 	getUserAttributes: (attributes) => {
 		return {
 			username: attributes.username,
-			githubId: attributes.github_id
+			githubId: attributes.githubId
 		};
 	}
 });
@@ -27,7 +23,7 @@ export const lucia = new Lucia(adapter, {
 declare module "lucia" {
 	interface Register {
 		Lucia: typeof lucia;
-		DatabaseUserAttributes: Omit<DatabaseUser, "id">;
+		DatabaseUserAttributes: Omit<User, "id">;
 	}
 }
 

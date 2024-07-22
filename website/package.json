@@ -7,19 +7,24 @@
 		"start": "astro dev",
 		"build": "astro check && astro build",
 		"preview": "astro preview",
-		"astro": "astro"
+		"astro": "astro",
+		"generate": "drizzle-kit generate",
+		"migrate": "drizzle-kit migrate",
+		"studio": "drizzle-kit studio"
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.8.2",
 		"@astrojs/node": "^8.3.2",
-		"@lucia-auth/adapter-sqlite": "^3.0.2",
+		"@lucia-auth/adapter-drizzle": "^1.0.7",
 		"arctic": "^1.9.2",
 		"astro": "^4.12.2",
-		"better-sqlite3": "^11.1.2",
+		"drizzle-orm": "^0.32.0",
 		"lucia": "^3.2.0",
+		"postgres": "^3.4.4",
 		"typescript": "^5.5.3"
 	},
 	"devDependencies": {
-		"@types/better-sqlite3": "^7.6.11"
+		"@types/better-sqlite3": "^7.6.11",
+		"drizzle-kit": "^0.23.0"
 	}
 }

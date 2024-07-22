@@ -1,10 +1,11 @@
 import { github, lucia } from "../../../lib/auth";
 import { OAuth2RequestError } from "arctic";
-import { db } from "../../../lib/db";
 import { generateId } from "lucia";
 
 import type { APIContext } from "astro";
-import type { DatabaseUser } from "../../../lib/db";
+import { userTable, type User } from "../../../lib/db/schema";
+import { db } from "../../../lib/db/postgres";
+import { eq } from "drizzle-orm";
 
 export async function GET(context: APIContext): Promise<Response> {
 	const code = context.url.searchParams.get("code");
@@ -24,9 +25,7 @@ export async function GET(context: APIContext): Promise<Response> {
 			}
 		});
 		const githubUser: GitHubUser = await githubUserResponse.json();
-		const existingUser = db.prepare("SELECT * FROM user WHERE github_id = ?").get(githubUser.id) as
-			| DatabaseUser
-			| undefined;
+		const existingUser = (await db.selectDistinct().from(userTable).where(eq(userTable.githubId, githubUser.id))).at(0);
 
 		if (existingUser) {
 			const session = await lucia.createSession(existingUser.id, {});
@@ -36,11 +35,13 @@ export async function GET(context: APIContext): Promise<Response> {
 		}
 
 		const userId = generateId(15);
-		db.prepare("INSERT INTO user (id, github_id, username) VALUES (?, ?, ?)").run(
-			userId,
-			githubUser.id,
-			githubUser.login
-		);
+
+		await db.insert(userTable).values({
+			id: userId, 
+			githubId: githubUser.id,
+			username: githubUser.login
+		})
+
 		const session = await lucia.createSession(userId, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		context.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
