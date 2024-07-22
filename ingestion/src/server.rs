@@ -83,7 +83,9 @@ async fn main() -> anyhow::Result<()> {
         .connect(&args.database_url)
         .await?;
 
-    sqlx::migrate!().run(&pool).await?;
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await?;
 
     println!("Connection to the DB was a success!");
     println!("Starting server on {}", args.server_addres);

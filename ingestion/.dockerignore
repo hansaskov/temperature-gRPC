@@ -5,7 +5,7 @@
 !build.rs
 !Cargo.lock
 !Cargo.toml
-
-
+!../db
+!db
 
 

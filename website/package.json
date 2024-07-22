@@ -1,0 +1,25 @@
+{
+	"name": "github-oauth",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro check && astro build",
+		"preview": "astro preview",
+		"astro": "astro"
+	},
+	"dependencies": {
+		"@astrojs/check": "^0.8.2",
+		"@astrojs/node": "^8.3.2",
+		"@lucia-auth/adapter-sqlite": "^3.0.2",
+		"arctic": "^1.9.2",
+		"astro": "^4.12.2",
+		"better-sqlite3": "^11.1.2",
+		"lucia": "^3.2.0",
+		"typescript": "^5.5.3"
+	},
+	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.11"
+	}
+}

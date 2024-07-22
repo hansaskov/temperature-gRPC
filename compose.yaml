@@ -1,7 +1,7 @@
 services:
   rust-server:
     build:
-      context: .
+      context: Ingestion/
       dockerfile: Dockerfile
     ports:
       - "50051:50051"
