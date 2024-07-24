@@ -1,4 +1,5 @@
 ---
+import Layout from "@/components/component/Layout.astro";
 const user = Astro.locals.user;
 if (!user) {
 	return Astro.redirect("/login");
@@ -13,11 +14,13 @@ if (!user) {
 		<title>Lucia example</title>
 	</head>
 	<body>
-		<h1>Hi, {user.username}!</h1>
-		<p>Your user ID is {user.id}.</p>
-		<form method="post" action="/api/logout">
-			<button>Sign out</button>
-		</form>
+		<Layout>
+			<h1>Hi, {user.username}!</h1>
+			<p>Your user ID is {user.id}.</p>
+			<form method="post" action="/api/logout">
+				<button>Sign out</button>
+			</form>
+		</Layout>	
 	</body>
 </html>
 

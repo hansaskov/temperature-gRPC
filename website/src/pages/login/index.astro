@@ -1,4 +1,5 @@
 ---
+import Layout from "@/components/component/Layout.astro";
 if (Astro.locals.user) {
 	return Astro.redirect("/");
 }
@@ -12,7 +13,9 @@ if (Astro.locals.user) {
 		<title>Lucia example</title>
 	</head>
 	<body>
-		<h1>Sign in</h1>
-		<a href="/login/github">Sign in with GitHub</a>
+		<Layout>
+			<h1>Sign in</h1>
+			<a href="/login/github">Sign in with GitHub</a>
+		</Layout>
 	</body>
 </html>
