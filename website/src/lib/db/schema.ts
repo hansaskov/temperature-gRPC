@@ -1,5 +1,5 @@
 import type { InferSelectModel } from 'drizzle-orm';
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, real, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export type User = InferSelectModel<typeof userTable>
 export const userTable = pgTable('user', {
@@ -21,4 +21,10 @@ export const sessionTable = pgTable("session", {
 	}).notNull()
 });
 
+type Timestampz = Date & {__brand: 'timestampz'}
+
+export const conditionsTable = pgTable("conditions", {
+	time: timestamp('time', {mode: 'date'}).$type<Timestampz>().notNull(),
+	temperature: real('temperature').notNull()
+})
 
