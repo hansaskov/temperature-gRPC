@@ -21,10 +21,10 @@ export const sessionTable = pgTable("session", {
 	}).notNull()
 });
 
-type Timestampz = Date & {__brand: 'timestampz'}
-
 export const conditionsTable = pgTable("conditions", {
-	time: timestamp('time', {mode: 'date'}).$type<Timestampz>().notNull(),
+	time: timestamp('time').notNull(),
 	temperature: real('temperature').notNull()
 })
 
+export type SelectCondition = typeof conditionsTable.$inferSelect
+export type InsertCondition = typeof conditionsTable.$inferInsert

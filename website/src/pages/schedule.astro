@@ -2,32 +2,24 @@
 import Layout from "@/components/component/Layout.astro";
 import { db } from "@/lib/db/postgres";
 import { conditionsTable } from "@/lib/db/schema";
+import {Component} from "@/components/component/AreaChart"
+import { asc, desc } from 'drizzle-orm';
 
 const user = Astro.locals.user;
 if (!user) {
     return Astro.redirect("/login");
 }
 
-const data = await db.select().from(conditionsTable).limit(10);
+const chartdata = await db.select().from(conditionsTable).orderBy(asc(conditionsTable.time)).limit(3600);
+
+
 ---
 
 <Layout>
-    <h1>Welcome, {user.username}!</h1>
-    <h2>Your Recent Conditions</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Temperature</th>
-            </tr>
-        </thead>
-        <tbody>
-            {data.map((v) => (
-                <tr>
-                    <td>{v.time.getSeconds() * 1000 + v.time.getMilliseconds()}</td>
-                    <td>{v.temperature.toFixed(1)}°C</td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
+    <main class="container relative mt-12">
+        
+    
+    <Component chartData={chartdata} client:load></Component>
+
+    </main>
 </Layout>
