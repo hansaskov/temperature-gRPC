@@ -3,7 +3,7 @@ import { OAuth2RequestError } from "arctic";
 import { generateId } from "lucia";
 
 import type { APIContext } from "astro";
-import { userTable, type User } from "../../../lib/db/schema";
+import { userTable } from "../../../lib/db/schema";
 import { db } from "../../../lib/db/postgres";
 import { eq } from "drizzle-orm";
 

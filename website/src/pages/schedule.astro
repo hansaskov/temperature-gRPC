@@ -1,25 +1,34 @@
 ---
 import Layout from "@/components/component/Layout.astro";
 import { db } from "@/lib/db/postgres";
-import { conditionsTable } from "@/lib/db/schema";
+import { conditions } from "@/lib/db/schema";
 import {Component} from "@/components/component/AreaChart"
-import { asc, desc } from 'drizzle-orm';
+import {max, sql} from 'drizzle-orm';
+import { time_bucket } from '@/lib/db/timescale'
 
 const user = Astro.locals.user;
 if (!user) {
     return Astro.redirect("/login");
 }
 
-const chartdata = await db.select().from(conditionsTable).orderBy(asc(conditionsTable.time)).limit(3600);
+const chartdata = await db.select().from(conditions).where(sql`${conditions.time} > NOW() - INTERVAL '10 minutes'`).then((v) => v.reverse());
 
+const fifteen_min = time_bucket(conditions.time, "1 minute").as("fifteen_minutes")
+
+const chartdata2 = await db.select({
+    time: fifteen_min,
+    temperature: sql`max(${conditions.temperature})`.mapWith(conditions.temperature)
+})
+    .from(conditions)
+    .where(sql`${conditions.time} > NOW() - INTERVAL '3 hours'`)
+    .groupBy(fifteen_min)
+    .orderBy(fifteen_min);
 
 ---
 
 <Layout>
     <main class="container relative mt-12">
-        
-    
-    <Component chartData={chartdata} client:load></Component>
-
+     
+    <Component chartData={chartdata2} client:load ></Component>
     </main>
 </Layout>
