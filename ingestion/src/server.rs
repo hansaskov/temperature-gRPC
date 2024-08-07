@@ -47,18 +47,20 @@ pub async fn insert_many_readings(
     pool: &PgPool,
 ) -> anyhow::Result<()> {
     let (times, temperatures): (Vec<_>, Vec<_>) = readings
-    .iter()
-    .filter_map(|reading| {
-        let timestamp = reading.timestamp.as_ref()?;
-        let temperature = reading.value.as_ref()?;
-        Some((TimeHelper::to_offset_date_time(timestamp), temperature.value))
-    })
-    .unzip();
+        .iter()
+        .filter_map(|reading| {
+            let timestamp = reading.timestamp.as_ref()?;
+            let temperature = reading.temperature.as_ref()?;
+            Some((
+                TimeHelper::to_offset_date_time(timestamp),
+                temperature.value,
+            ))
+        })
+        .unzip();
 
     if times.is_empty() {
         anyhow::bail!("No valid readings with timestamps found");
     }
-
 
     sqlx::query(
         r#"
@@ -83,9 +85,7 @@ async fn main() -> anyhow::Result<()> {
         .connect(&args.database_url)
         .await?;
 
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
 
     println!("Connection to the DB was a success!");
     println!("Starting server on {}", args.server_addres);

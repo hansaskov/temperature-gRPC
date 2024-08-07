@@ -9,12 +9,12 @@ service TemperatureService {
 }
 
 message Temperature {
-    double value = 1;
+    float value = 1;
 }
 
 message TemperatureReading {
     google.protobuf.Timestamp timestamp = 1;
-    Temperature value = 2; 
+    Temperature temperature = 2; 
 }
 
 message TemperatureRequest {

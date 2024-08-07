@@ -22,9 +22,9 @@ pub mod windows_hardware_monitor {
     pub struct Sensor {
         pub sensor_type: SensorType,
         pub name: String,
-        pub value: f64,
-        pub min: f64,
-        pub max: f64,
+        pub value: f32,
+        pub min: f32,
+        pub max: f32,
     }
 
     pub struct HardwareMonitor {
