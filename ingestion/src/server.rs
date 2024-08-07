@@ -47,14 +47,13 @@ pub async fn insert_many_readings(
     pool: &PgPool,
 ) -> anyhow::Result<()> {
     let (times, temperatures): (Vec<_>, Vec<_>) = readings
-        .iter()
-        .filter_map(|reading| {
-            reading
-                .timestamp
-                .as_ref()
-                .map(|timestamp| (TimeHelper::to_offset_date_time(timestamp), reading.value))
-        })
-        .unzip();
+    .iter()
+    .filter_map(|reading| {
+        let timestamp = reading.timestamp.as_ref()?;
+        let temperature = reading.value.as_ref()?;
+        Some((TimeHelper::to_offset_date_time(timestamp), temperature.value))
+    })
+    .unzip();
 
     if times.is_empty() {
         anyhow::bail!("No valid readings with timestamps found");

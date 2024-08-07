@@ -1,6 +1,6 @@
 use std::time::Duration;
 use temperature::{
-    temperature_service_client::TemperatureServiceClient, TemperatureReading, TemperatureRequest,
+    temperature_service_client::TemperatureServiceClient, Temperature, TemperatureReading, TemperatureRequest
 };
 use tempurature_grpc::windows_hardware_monitor::HardwareMonitor;
 use tokio::time::Instant;
@@ -34,10 +34,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 readings.push(TemperatureReading {
                     timestamp: Some(timestamp),
-                    value: cpu.value,
+                    value: Some(Temperature { value: cpu.value }) ,
                 });
             }
-            Err(x) => println!("Timestamp: {timestamp}, error: {x}"),
+            Err(x) => eprintln!("Timestamp: {timestamp}, error: {x}"),
         }
 
         if readings.len() >= BATCH_SIZE {

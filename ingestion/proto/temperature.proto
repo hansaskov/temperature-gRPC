@@ -8,9 +8,13 @@ service TemperatureService {
     rpc SendTemperatures(TemperatureRequest) returns (Empty);
 }
 
+message Temperature {
+    double value = 1;
+}
+
 message TemperatureReading {
     google.protobuf.Timestamp timestamp = 1;
-    double value = 2;  // Temperature value
+    Temperature value = 2; 
 }
 
 message TemperatureRequest {
@@ -20,4 +24,3 @@ message TemperatureRequest {
 message Empty {
 
 }
-
