@@ -1,16 +1,16 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use temperature::{
     temperature_service_client::TemperatureServiceClient, Temperature, TemperatureReading, TemperatureRequest
 };
-use tempurature_grpc::windows_hardware_monitor::HardwareMonitor;
+
 use tokio::time::Instant;
 
 pub mod temperature {
     tonic::include_proto!("temperature");
 }
 
-mod time_helper;
-use time_helper::TimeHelper;
+mod windows_hardware_monitor;
+use windows_hardware_monitor::windows_hardware_monitor::HardwareMonitor;
 
 const BATCH_SIZE: usize = 5;
 const LOOP_DURATION: Duration = Duration::from_secs(1);
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         let start = Instant::now();
 
-        let timestamp = TimeHelper::timestamp_now();
+        let timestamp = prost_types::Timestamp::from(SystemTime::now());
         match hw.cpu_temp() {
             Ok(cpu) => {
                 println!(

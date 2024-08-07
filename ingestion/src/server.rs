@@ -59,6 +59,7 @@ pub async fn insert_many_readings(
         anyhow::bail!("No valid readings with timestamps found");
     }
 
+
     sqlx::query(
         r#"
         INSERT INTO conditions (time, temperature)
