@@ -1,9 +1,43 @@
 {
-  "id": "81f1cfb7-746c-4037-9493-1a3f19deefed",
-  "prevId": "9bbd8f6f-728c-4411-8852-1f0df3ed350d",
+  "id": "b71c27ec-e163-4326-9743-088ed4de34d5",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.conditions": {
+      "name": "conditions",
+      "schema": "",
+      "columns": {
+        "time": {
+          "name": "time",
+          "type": "timestamptz",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_temperature": {
+          "name": "cpu_temperature",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_usage": {
+          "name": "cpu_usage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "memory_usage": {
+          "name": "memory_usage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.session": {
       "name": "session",
       "schema": "",

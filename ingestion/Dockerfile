@@ -24,6 +24,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # Build application
 COPY . .
+# COPY . ../migrations
 RUN cargo build --bin server --release
 RUN strip target/release/server
 

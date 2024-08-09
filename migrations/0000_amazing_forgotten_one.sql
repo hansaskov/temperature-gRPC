@@ -1,3 +1,10 @@
+CREATE TABLE IF NOT EXISTS "conditions" (
+	"time" "timestamptz" NOT NULL,
+	"cpu_temperature" real NOT NULL,
+	"cpu_usage" real NOT NULL,
+	"memory_usage" real NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "session" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -6,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "session" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
 	"id" text PRIMARY KEY NOT NULL,
-	"github_id" integer,
+	"github_id" text,
 	"username" text NOT NULL,
 	CONSTRAINT "user_github_id_unique" UNIQUE("github_id")
 );

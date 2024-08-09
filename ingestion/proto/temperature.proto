@@ -4,21 +4,23 @@ package temperature;
 
 import "google/protobuf/timestamp.proto";
 
-service TemperatureService {
-    rpc SendTemperatures(TemperatureRequest) returns (Empty);
+service ConditionsService {
+    rpc SendConditions(ConditionsRequest) returns (Empty);
 }
 
-message Temperature {
-    float value = 1;
+message Conditions {
+    float cpu_usage = 1;
+    float cpu_temperature = 2;
+    float memory_usage = 3;
 }
 
-message TemperatureReading {
+message Reading {
     google.protobuf.Timestamp timestamp = 1;
-    Temperature temperature = 2; 
+    Conditions condition = 2; 
 }
 
-message TemperatureRequest {
-    repeated TemperatureReading readings = 1;
+message ConditionsRequest {
+    repeated Reading readings = 1;
 }
 
 message Empty {

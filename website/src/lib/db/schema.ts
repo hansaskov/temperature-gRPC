@@ -1,6 +1,6 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import { pgTable, real, text, timestamp } from 'drizzle-orm/pg-core';
-import { timestampz } from '@/lib/db/timescale'
+import { timestamptz } from '@/lib/db/timescale'
 
 export type User = InferSelectModel<typeof userTable>
 export const userTable = pgTable('user', {
@@ -24,8 +24,11 @@ export const sessionTable = pgTable("session", {
 
 
 export const conditions = pgTable("conditions", {
-	time: timestampz('time').notNull(),
-	temperature: real('temperature').notNull()
+	time: timestamptz('time').notNull(),
+	cpu_temperature: real('cpu_temperature').notNull(),
+	cpu_usage: real('cpu_usage').notNull(),
+	memory_usage: real('memory_usage').notNull()
+
 })
 
 export type SelectCondition = typeof conditions.$inferSelect

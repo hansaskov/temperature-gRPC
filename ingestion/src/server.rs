@@ -1,6 +1,6 @@
 use clap::Parser;
-use proto::temperature_service_server::{TemperatureService, TemperatureServiceServer};
-use proto::{TemperatureReading, TemperatureRequest};
+use proto::conditions_service_server::{ConditionsService, ConditionsServiceServer};
+use proto::{ConditionsRequest, Reading};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tonic::{transport::Server, Request, Response, Status};
@@ -19,10 +19,10 @@ pub struct MyTemperature {
 }
 
 #[tonic::async_trait]
-impl TemperatureService for MyTemperature {
-    async fn send_temperatures(
+impl ConditionsService for MyTemperature {
+    async fn send_conditions(
         &self,
-        request: Request<TemperatureRequest>,
+        request: Request<ConditionsRequest>,
     ) -> Result<Response<proto::Empty>, Status> {
         let readings = &request.get_ref().readings;
 
@@ -42,21 +42,30 @@ impl TemperatureService for MyTemperature {
     }
 }
 
-pub async fn insert_many_readings(
-    readings: &[TemperatureReading],
-    pool: &PgPool,
-) -> anyhow::Result<()> {
-    let (times, temperatures): (Vec<_>, Vec<_>) = readings
-        .iter()
-        .filter_map(|reading| {
-            let timestamp = reading.timestamp.as_ref()?;
-            let temperature = reading.temperature.as_ref()?;
-            Some((
-                TimeHelper::to_offset_date_time(timestamp),
-                temperature.value,
-            ))
-        })
-        .unzip();
+pub async fn insert_many_readings(readings: &[Reading], pool: &PgPool) -> anyhow::Result<()> {
+    let (times, cpu_temperature, cpu_usage, memory_usage): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
+        readings
+            .iter()
+            .filter_map(|reading| {
+                let timestamp = reading.timestamp.as_ref()?;
+                let temperature = reading.condition.as_ref()?;
+                Some((
+                    TimeHelper::to_offset_date_time(timestamp),
+                    temperature.cpu_temperature,
+                    temperature.cpu_usage,
+                    temperature.memory_usage,
+                ))
+            })
+            .fold(
+                (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
+                |mut acc, (time, temp, cpu, mem)| {
+                    acc.0.push(time);
+                    acc.1.push(temp);
+                    acc.2.push(cpu);
+                    acc.3.push(mem);
+                    acc
+                },
+            );
 
     if times.is_empty() {
         anyhow::bail!("No valid readings with timestamps found");
@@ -64,12 +73,14 @@ pub async fn insert_many_readings(
 
     sqlx::query(
         r#"
-        INSERT INTO conditions (time, temperature)
-        SELECT * FROM UNNEST($1::timestamptz[], $2::float8[])
+        INSERT INTO conditions (time, cpu_temperature, cpu_usage, memory_usage)
+        SELECT * FROM UNNEST($1::timestamptz[], $2::real[], $3::real[], $4::real[])
         "#,
     )
     .bind(&times)
-    .bind(&temperatures)
+    .bind(&cpu_temperature)
+    .bind(&cpu_usage)
+    .bind(&memory_usage)
     .execute(pool)
     .await?;
 
@@ -80,18 +91,17 @@ pub async fn insert_many_readings(
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
+    println!("Starting server on {}", args.server_address);
     let pool = PgPoolOptions::new()
         .max_connections(args.max_connections)
         .connect(&args.database_url)
         .await?;
-
-    sqlx::migrate!("./migrations").run(&pool).await?;
-
     println!("Connection to the DB was a success!");
-    println!("Starting server on {}", args.server_addres);
+
+    println!("Server is now up an running");
     Server::builder()
-        .add_service(TemperatureServiceServer::new(MyTemperature { pool }))
-        .serve(args.server_addres.parse()?)
+        .add_service(ConditionsServiceServer::new(MyTemperature { pool }))
+        .serve(args.server_address)
         .await?;
 
     Ok(())

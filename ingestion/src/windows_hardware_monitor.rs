@@ -2,7 +2,11 @@
 pub mod windows_hardware_monitor {
     use anyhow::{anyhow, Result};
     use serde::Deserialize;
+    use temperature::Conditions;
     use wmi::{COMLibrary, WMIConnection};
+    use crate::temperature;
+
+    const ERROR_MSG: &str = "Found nothing, are you sure Libre Hardware Monitor is running?";
 
     #[derive(Deserialize, Debug, Clone)]
     #[serde(rename_all = "PascalCase")]
@@ -34,35 +38,46 @@ pub mod windows_hardware_monitor {
     impl HardwareMonitor {
         pub fn new() -> Result<Self> {
             let com_con = COMLibrary::new()?;
-            let wmi_con =
-                WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
-
+            let wmi_con = WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
             Ok(Self { wmi_con })
         }
 
-        pub fn query_sensor_type(
-            &self,
-            sensor_type: SensorType,
-            name_filter: &str,
-        ) -> Result<Vec<Sensor>> {
-            let query = format!("SELECT * FROM Sensor WHERE SensorType = '{sensor_type:?}' AND Name LIKE '%{name_filter}%'");
-
-            let results: Vec<Sensor> = self.wmi_con.raw_query(query)?;
-
-            Ok(results)
+        fn get_like_query(sensor_type: SensorType, name_filter: &str) -> String {
+            format!("SELECT * FROM Sensor WHERE SensorType = '{sensor_type:?}' AND Name LIKE '%{name_filter}%'")
         }
 
-        pub fn cpu_temp(&self) -> Result<Sensor> {
-            let result = self.query_sensor_type(SensorType::Temperature, "Core")?;
+        fn get_equals_query(sensor_type: SensorType, name_filter: &str) -> String {
+            format!("SELECT * FROM Sensor WHERE SensorType = '{sensor_type:?}' AND Name = '{name_filter}'")
+        }
 
-            let sensor_reading = result.first();
+        fn get_sensor(&self, sensor_type: SensorType, name_filter: &str, use_like: bool) -> Result<Sensor> {
+            let query = if use_like {
+                Self::get_like_query(sensor_type, name_filter)
+            } else {
+                Self::get_equals_query(sensor_type, name_filter)
+            };
+            let result: Vec<Sensor> = self.wmi_con.raw_query(query)?;
+            result.first().cloned().ok_or_else(|| anyhow!(ERROR_MSG))
+        }
 
-            match sensor_reading {
-                Some(sensor) => Ok(sensor.clone()),
-                None => Err(anyhow!(
-                    "Found nothing, are you sure Libre Hardware Monitor is running?"
-                )),
-            }
+        pub fn cpu_temperature(&self) -> Result<Sensor> {
+            self.get_sensor(SensorType::Temperature, "Core", true)
+        }
+
+        pub fn cpu_usage(&self) -> Result<Sensor> {
+            self.get_sensor(SensorType::Load, "CPU Total", true)
+        }
+
+        pub fn memory_usage(&self) -> Result<Sensor> {
+            self.get_sensor(SensorType::Load, "Memory", false)
+        }
+
+        pub fn get_conditions(&self) -> Result<Conditions> {
+            Ok(Conditions {
+                cpu_temperature: self.cpu_temperature()?.value,
+                cpu_usage: self.cpu_usage()?.value,
+                memory_usage: self.memory_usage()?.value,
+            })
         }
     }
 }

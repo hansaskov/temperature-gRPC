@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
 use std::time::{Duration, SystemTime};
 use temperature::{
-    temperature_service_client::TemperatureServiceClient, Temperature, TemperatureReading,
-    TemperatureRequest,
+    conditions_service_client::ConditionsServiceClient, Conditions, ConditionsRequest, Reading,
 };
 use tokio::{signal, sync::mpsc, time::interval};
 pub mod temperature {
@@ -16,7 +15,7 @@ const LOOP_DURATION: Duration = Duration::from_secs(1);
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = TemperatureServiceClient::connect("http://[::1]:50051").await?;
+    let mut client = ConditionsServiceClient::connect("http://[::1]:50051").await?;
     let hw = HardwareMonitor::new().context("Failed to initialize hardware monitor")?;
     let mut readings = Vec::with_capacity(BATCH_SIZE);
 
@@ -33,16 +32,29 @@ async fn main() -> Result<()> {
     loop {
         tokio::select! {
             _ = interval.tick() => {
-                if let Ok(reading) = record_temperature(&hw) {
-                    readings.push(reading);
-                    if readings.len() >= BATCH_SIZE {
-                        send_readings(&mut client, &mut readings).await?;
-                    }
+
+                match record_temperature(&hw) {
+                    Ok(reading) => {
+                        readings.push(reading);
+                        if readings.len() >= BATCH_SIZE {
+                            // Handle potential error from await
+                            match send_readings(&mut client, &mut readings).await {
+                                Ok(_) =>  println!("Request was a success!"),  
+                                Err(e) => eprintln!("Failed to send readings: {}", e),
+                            }
+                        }
+                    },
+                    Err(e) => eprintln!("Failed to record temperature: {}", e),
                 }
+                
+
             }
             _ = shutdown_recv.recv() => {
                 if !readings.is_empty() {
-                    send_readings(&mut client, &mut readings).await?;
+                    match send_readings(&mut client, &mut readings).await {
+                        Ok(_) =>  println!("Sending final readings was a success!"),  
+                        Err(e) => eprintln!("Failed to send final readings: {}", e),
+                    };
                 }
                 println!("Shutting down gracefully.");
                 break;
@@ -52,32 +64,31 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn record_temperature(hw: &HardwareMonitor) -> Result<TemperatureReading> {
+fn record_temperature(hw: &HardwareMonitor) -> Result<Reading> {
     let timestamp = prost_types::Timestamp::from(SystemTime::now());
-    let cpu_temp = hw.cpu_temp()?;
+    let conditions = hw
+        .get_conditions()
+        .context("No values read, are you sure LibreHardwareMonitor is running?")?;
     println!(
-        "Recorded: Timestamp: {}, Temperature: {}°C",
-        timestamp, cpu_temp.value
+        "Recorded: Timestamp: {}, Temperature: {:?}°C",
+        timestamp, conditions
     );
-    Ok(TemperatureReading {
+    Ok(Reading {
         timestamp: Some(timestamp),
-        temperature: Some(Temperature {
-            value: cpu_temp.value,
-        }),
+        condition: Some(conditions),
     })
 }
 
 async fn send_readings(
-    client: &mut TemperatureServiceClient<tonic::transport::Channel>,
-    readings: &mut Vec<TemperatureReading>,
+    client: &mut ConditionsServiceClient<tonic::transport::Channel>,
+    readings: &mut Vec<Reading>,
 ) -> Result<()> {
-    let request = tonic::Request::new(TemperatureRequest {
+    let request = tonic::Request::new(ConditionsRequest {
         readings: std::mem::take(readings),
     });
     client
-        .send_temperatures(request)
+        .send_conditions(request)
         .await
         .context("Failed to send temperatures")?;
-    println!("Request was a success!");
     Ok(())
 }

@@ -1,5 +1,5 @@
 *
-!migrations
+!../migrations
 !proto
 !src
 !build.rs
