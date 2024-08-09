@@ -33,6 +33,7 @@ async fn main() -> Result<()> {
 
                 match record_temperature(&hw) {
                     Ok(reading) => {
+                        println!("{:?}, {:?}", reading.timestamp, reading.condition);
                         readings.push(reading);
                         if readings.len() >= BATCH_SIZE {
                             // Handle potential error from await
@@ -67,10 +68,6 @@ fn record_temperature(hw: &HardwareMonitor) -> Result<Reading> {
     let conditions = hw
         .get_conditions()
         .context("No values read, are you sure LibreHardwareMonitor is running?")?;
-    println!(
-        "Recorded: Timestamp: {}, Temperature: {:?}°C",
-        timestamp, conditions
-    );
     Ok(Reading {
         timestamp: Some(timestamp),
         condition: Some(conditions),
@@ -82,11 +79,14 @@ async fn send_readings(
     readings: &mut Vec<Reading>,
 ) -> Result<()> {
     let request = tonic::Request::new(ConditionsRequest {
-        readings: std::mem::take(readings),
+        readings: readings.to_vec(),
     });
-    client
-        .send_conditions(request)
-        .await
-        .context("Failed to send temperatures")?;
-    Ok(())
+
+    match client.send_conditions(request).await {
+        Ok(r) => {
+            readings.clear();
+            Ok(())
+        }
+        Err(e) => Err(e).context("Failed to send temperatures"),
+    }
 }

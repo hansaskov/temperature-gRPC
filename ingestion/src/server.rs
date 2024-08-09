@@ -24,21 +24,22 @@ impl ConditionsService for MyTemperature {
         &self,
         request: Request<ConditionsRequest>,
     ) -> Result<Response<proto::Empty>, Status> {
-        let readings = &request.get_ref().readings;
+        let readings = request.get_ref().readings.clone();
 
         if readings.is_empty() {
             return Err(Status::invalid_argument("The provided request is empty"));
         }
 
-        insert_many_readings(readings, &self.pool)
-            .await
-            .map_err(|e| Status::internal(format!("Failed to insert readings: {}", e)))?;
-
-        for reading in readings {
-            println!("{reading:?}");
+        match insert_many_readings(&readings, &self.pool).await {
+            Ok(_) => {
+                println!("Successfully inserted {} readings", readings.len());
+                Ok(Response::new(proto::Empty {}))
+            }
+            Err(e) => Err(Status::internal(format!(
+                "Failed to insert readings: {}",
+                e
+            ))),
         }
-
-        Ok(Response::new(proto::Empty {}))
     }
 }
 
@@ -65,8 +66,18 @@ pub async fn insert_many_readings(readings: &[Reading], pool: &PgPool) -> anyhow
 
     sqlx::query(
         r#"
-        INSERT INTO conditions (time, cpu_temperature, cpu_usage, memory_usage)
-        SELECT * FROM UNNEST($1::timestamptz[], $2::real[], $3::real[], $4::real[])
+        INSERT INTO conditions (
+            time, 
+            cpu_temperature, 
+            cpu_usage, 
+            memory_usage
+        )
+        SELECT * FROM UNNEST(
+            $1::timestamptz[], 
+            $2::real[], 
+            $3::real[], 
+            $4::real[]
+        )
         "#,
     )
     .bind(&times)
