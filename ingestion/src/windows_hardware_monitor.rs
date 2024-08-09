@@ -1,10 +1,10 @@
 #[cfg(target_os = "windows")]
 pub mod windows_hardware_monitor {
+    use crate::temperature;
     use anyhow::{anyhow, Result};
     use serde::Deserialize;
     use temperature::Conditions;
     use wmi::{COMLibrary, WMIConnection};
-    use crate::temperature;
 
     const ERROR_MSG: &str = "Found nothing, are you sure Libre Hardware Monitor is running?";
 
@@ -38,7 +38,8 @@ pub mod windows_hardware_monitor {
     impl HardwareMonitor {
         pub fn new() -> Result<Self> {
             let com_con = COMLibrary::new()?;
-            let wmi_con = WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
+            let wmi_con =
+                WMIConnection::with_namespace_path("ROOT\\LibreHardwareMonitor", com_con)?;
             Ok(Self { wmi_con })
         }
 
@@ -50,7 +51,12 @@ pub mod windows_hardware_monitor {
             format!("SELECT * FROM Sensor WHERE SensorType = '{sensor_type:?}' AND Name = '{name_filter}'")
         }
 
-        fn get_sensor(&self, sensor_type: SensorType, name_filter: &str, use_like: bool) -> Result<Sensor> {
+        fn get_sensor(
+            &self,
+            sensor_type: SensorType,
+            name_filter: &str,
+            use_like: bool,
+        ) -> Result<Sensor> {
             let query = if use_like {
                 Self::get_like_query(sensor_type, name_filter)
             } else {

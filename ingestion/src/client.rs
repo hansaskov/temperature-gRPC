@@ -39,20 +39,20 @@ async fn main() -> Result<()> {
                         if readings.len() >= BATCH_SIZE {
                             // Handle potential error from await
                             match send_readings(&mut client, &mut readings).await {
-                                Ok(_) =>  println!("Request was a success!"),  
+                                Ok(_) =>  println!("Request was a success!"),
                                 Err(e) => eprintln!("Failed to send readings: {}", e),
                             }
                         }
                     },
                     Err(e) => eprintln!("Failed to record temperature: {}", e),
                 }
-                
+
 
             }
             _ = shutdown_recv.recv() => {
                 if !readings.is_empty() {
                     match send_readings(&mut client, &mut readings).await {
-                        Ok(_) =>  println!("Sending final readings was a success!"),  
+                        Ok(_) =>  println!("Sending final readings was a success!"),
                         Err(e) => eprintln!("Failed to send final readings: {}", e),
                     };
                 }
