@@ -43,29 +43,21 @@ impl ConditionsService for MyTemperature {
 }
 
 pub async fn insert_many_readings(readings: &[Reading], pool: &PgPool) -> anyhow::Result<()> {
-    let (times, cpu_temperature, cpu_usage, memory_usage): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
-        readings
-            .iter()
-            .filter_map(|reading| {
-                let timestamp = reading.timestamp.as_ref()?;
-                let temperature = reading.condition.as_ref()?;
-                Some((
-                    TimeHelper::to_offset_date_time(timestamp),
-                    temperature.cpu_temperature,
-                    temperature.cpu_usage,
-                    temperature.memory_usage,
-                ))
-            })
-            .fold(
-                (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
-                |mut acc, (time, temp, cpu, mem)| {
-                    acc.0.push(time);
-                    acc.1.push(temp);
-                    acc.2.push(cpu);
-                    acc.3.push(mem);
-                    acc
-                },
-            );
+    let mut times = Vec::new();
+    let mut cpu_temperature = Vec::new();
+    let mut cpu_usage = Vec::new();
+    let mut memory_usage = Vec::new();
+
+    for reading in readings {
+        if let (Some(timestamp), Some(conditions)) =
+            (reading.timestamp.as_ref(), reading.condition.as_ref())
+        {
+            times.push(TimeHelper::to_offset_date_time(timestamp));
+            cpu_temperature.push(conditions.cpu_temperature);
+            cpu_usage.push(conditions.cpu_usage);
+            memory_usage.push(conditions.memory_usage);
+        }
+    }
 
     if times.is_empty() {
         anyhow::bail!("No valid readings with timestamps found");
