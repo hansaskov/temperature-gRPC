@@ -17,7 +17,10 @@ const fifteen_min = time_bucket(conditions.time, "1 minute").as("fifteen_minutes
 
 const chartdata2 = await db.select({
     time: fifteen_min,
-    temperature: sql`max(${conditions.temperature})`.mapWith(conditions.temperature)
+    cpu_temperature: sql`max(${conditions.cpu_temperature})`.mapWith(conditions.cpu_temperature),
+    cpu_usage: sql`max(${conditions.cpu_usage})`.mapWith(conditions.cpu_usage),
+    memory_usage: sql`max(${conditions.memory_usage})`.mapWith(conditions.memory_usage),
+
 })
     .from(conditions)
     .where(sql`${conditions.time} > NOW() - INTERVAL '3 hours'`)

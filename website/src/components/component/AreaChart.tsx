@@ -111,7 +111,7 @@ export function Component({chartData}: {chartData: SelectCondition[]}) {
               content={<ChartTooltipContent indicator="dot" />}
             />
             <Area
-              dataKey="temperature"
+              dataKey="cpu_temperature"
               type="natural"
               fill="url(#fillDesktop)"
               stroke="var(--color-desktop)"
