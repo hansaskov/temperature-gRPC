@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@astrojs/check": "^0.8.3",
 		"@astrojs/node": "^8.3.2",
-		"@astrojs/react": "^3.6.1",
+		"@astrojs/react": "^3.6.2",
 		"@astrojs/tailwind": "^5.1.0",
 		"@lucia-auth/adapter-drizzle": "^1.1.0",
 		"@radix-ui/react-dialog": "^1.1.1",
@@ -25,10 +25,10 @@
 		"@types/react": "^18.3.3",
 		"@types/react-dom": "^18.3.0",
 		"arctic": "^1.9.2",
-		"astro": "^4.13.2",
+		"astro": "^4.13.3",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",
-		"drizzle-orm": "^0.32.2",
+		"drizzle-orm": "^0.33.0",
 		"lucia": "^3.2.0",
 		"lucide-react": "^0.414.0",
 		"postgres": "^3.4.4",
@@ -42,6 +42,6 @@
 	},
 	"devDependencies": {
 		"@types/better-sqlite3": "^7.6.11",
-		"drizzle-kit": "^0.23.2"
+		"drizzle-kit": "^0.24.0"
 	}
 }
